@@ -1,25 +1,25 @@
 import axios from 'axios';
 
-const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://onspace.ai';
-const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || '';
+const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://whwguwpynewmnhzywhwg.backend.onspace.ai';
+const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3Nzc2MjQ2MjksImV4cCI6MjA5Mjk4NDYyOSwicmVmIjoid2h3Z3V3cHluZXdtbmh6eXdod2ciLCJyb2xlIjoiYW5vbiIsImlzcyI6Im9uc3BhY2UifQ.qyXh3SaSQA85I3GqQI75kAeDnTK0di7__F3_rXTI8rQ';
 
 // API endpoint for custom REST calls
-export const apiEndpoint = process.env.SUPABASE_API_ENDPOINT || 'https://whwguwpynewmnhzywhwg.backend.onspace.ai/rest/v1';
+export const apiEndpoint = process.env.SUPABASE_API_ENDPOINT || `${supabaseUrl}/rest/v1`;
 
 // Supabase API instance
 const supabaseApi = axios.create({
   baseURL: apiEndpoint,
   headers: {
-    'apikey': supabaseKey,
+    apikey: supabaseKey,
     'Content-Type': 'application/json',
-    'Authorization': `Bearer ${supabaseKey}`,
+    Authorization: `Bearer ${supabaseKey}`,
   },
 });
 
 export type Student = {
   id: number;
   login_id: string;
-  parol?: string;
+  password?: string;
   ism?: string;
   familiya?: string;
   email?: string;
@@ -36,14 +36,13 @@ export type LoginResponse = {
 };
 
 /**
- * Login qilish talabalar jadvalidagi login_id va parol orqali
+ * Login qilish talabalar jadvalidagi login_id va password orqali
  */
 export async function loginStudent(loginId: string, password: string): Promise<LoginResponse> {
   try {
     console.log('[Supabase] Logging in student:', loginId);
-    
-    // Talabalar jadvalida login_id ni qidirish
-    const response = await supabaseApi.get('/talabalar', {
+
+    const response = await supabaseApi.get('/students', {
       params: {
         select: '*',
         login_id: `eq.${loginId}`,
@@ -51,7 +50,6 @@ export async function loginStudent(loginId: string, password: string): Promise<L
     });
 
     const students = response.data;
-    
     if (!students || students.length === 0) {
       return {
         success: false,
@@ -60,26 +58,23 @@ export async function loginStudent(loginId: string, password: string): Promise<L
     }
 
     const student = students[0];
-
-    // Parol tekshirish
-    if (student.parol !== password) {
+    if (student.password !== password) {
       return {
         success: false,
-        error: 'Parol noto\'g\'ri',
+        error: 'Parol noto‘g‘ri',
       };
     }
 
-    // Muvaffaqiyatli login
     return {
       success: true,
       student,
       token: `student_${student.id}_${Date.now()}`,
     };
   } catch (error: any) {
-    console.error('[Supabase] Login error:', error.message);
+    console.error('[Supabase] Login error:', error?.message || error);
     return {
       success: false,
-      error: error.message || 'Login xatosi yuz berdi',
+      error: error?.message || 'Login xatosi yuz berdi',
     };
   }
 }
