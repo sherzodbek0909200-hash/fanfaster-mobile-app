@@ -1,11 +1,35 @@
-import { ScrollView, Text, View, TouchableOpacity } from "react-native";
+import { ScrollView, Text, View, TouchableOpacity, Alert } from "react-native";
 import { ScreenContainer } from "@/components/screen-container";
+import { useAuth } from "@/hooks/use-auth";
+import { useRouter } from "expo-router";
+import { useColors } from "@/hooks/use-colors";
 
 /**
  * Profile Screen - Profil
  * Displays user profile, achievements, and statistics
  */
 export default function ProfileScreen() {
+  const { user, logout } = useAuth();
+  const router = useRouter();
+  const colors = useColors();
+
+  const handleLogout = async () => {
+    Alert.alert("Chiqish", "Akkauntdan chiqishni xohlaysizmi?", [
+      { text: "Bekor qilish", onPress: () => {} },
+      {
+        text: "Chiqish",
+        onPress: async () => {
+          try {
+            await logout();
+            router.replace("/login");
+          } catch (error) {
+            Alert.alert("Xato", "Chiqishda xato: " + error);
+          }
+        },
+      },
+    ]);
+  };
+
   const stats = [
     { label: "Darslar", value: "12", icon: "📚" },
     { label: "Testlar", value: "8", icon: "✓" },
@@ -27,8 +51,11 @@ export default function ProfileScreen() {
           <View className="w-20 h-20 rounded-full bg-primary items-center justify-center mb-4">
             <Text className="text-4xl">👤</Text>
           </View>
-          <Text className="text-2xl font-bold text-foreground">Foydalanuvchi</Text>
-          <Text className="text-sm text-muted mt-1">user@fanfaster.uz</Text>
+          <Text className="text-2xl font-bold text-foreground">{user?.name || "Foydalanuvchi"}</Text>
+          <Text className="text-sm text-muted mt-1">{user?.email || "user@fanfaster.uz"}</Text>
+          {user?.loginMethod && (
+            <Text className="text-xs text-muted mt-1">ID: {user.id}</Text>
+          )}
         </View>
 
         {/* Statistics */}
@@ -67,7 +94,11 @@ export default function ProfileScreen() {
           <TouchableOpacity className="bg-surface rounded-2xl py-3 px-4 items-center border border-border">
             <Text className="text-foreground font-semibold">Sozlamalar</Text>
           </TouchableOpacity>
-          <TouchableOpacity className="bg-error rounded-2xl py-3 px-4 items-center opacity-80">
+          <TouchableOpacity 
+            onPress={handleLogout}
+            style={{ backgroundColor: colors.error || '#ef4444' }}
+            className="rounded-2xl py-3 px-4 items-center opacity-80"
+          >
             <Text className="text-white font-semibold">Chiqish</Text>
           </TouchableOpacity>
         </View>
