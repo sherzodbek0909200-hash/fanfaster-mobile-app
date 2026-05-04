@@ -18,12 +18,19 @@ const MAPPING = {
   "paperplane.fill": "send",
   "chevron.left.forwardslash.chevron.right": "code",
   "chevron.right": "chevron-right",
+  "book.fill": "book",
+  "questionmark.circle.fill": "help",
+  "checkmark.circle.fill": "check-circle",
+  "chart.bar.fill": "bar-chart",
+  "person.fill": "person",
+  "sparkles": "star",
 } as IconMapping;
 
 /**
  * An icon component that uses native SF Symbols on iOS, and Material Icons on Android and web.
  * This ensures a consistent look across platforms, and optimal resource usage.
  * Icon `name`s are based on SF Symbols and require manual mapping to Material Icons.
+ * FanFaster icons: house.fill, book.fill, questionmark.circle.fill, checkmark.circle.fill, chart.bar.fill, person.fill, sparkles
  */
 export function IconSymbol({
   name,
