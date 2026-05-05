@@ -19,27 +19,49 @@ export function useAuth(options?: UseAuthOptions) {
       setLoading(true);
       setError(null);
 
+      // First try to get cached user info
+      const cachedUser = await Auth.getUserInfo();
+      console.log("[useAuth] Cached user:", cachedUser);
+
+      if (cachedUser) {
+        // Validate session token exists
+        const sessionToken = await Auth.getSessionToken();
+        if (sessionToken) {
+          console.log("[useAuth] Using cached user with valid session");
+          setUser(cachedUser);
+          return;
+        } else {
+          // Clear invalid cache
+          await Auth.clearUserInfo();
+        }
+      }
+
       // Web platform: use cookie-based auth, fetch user from API
       if (Platform.OS === "web") {
         console.log("[useAuth] Web platform: fetching user from API...");
-        const apiUser = await Api.getMe();
-        console.log("[useAuth] API user response:", apiUser);
+        try {
+          const apiUser = await Api.getMe();
+          console.log("[useAuth] API user response:", apiUser);
 
-        if (apiUser) {
-          const userInfo: Auth.User = {
-            id: apiUser.id,
-            openId: apiUser.openId,
-            name: apiUser.name,
-            email: apiUser.email,
-            loginMethod: apiUser.loginMethod,
-            lastSignedIn: new Date(apiUser.lastSignedIn),
-          };
-          setUser(userInfo);
-          // Cache user info in localStorage for faster subsequent loads
-          await Auth.setUserInfo(userInfo);
-          console.log("[useAuth] Web user set from API:", userInfo);
-        } else {
-          console.log("[useAuth] Web: No authenticated user from API");
+          if (apiUser) {
+            const userInfo: Auth.User = {
+              id: apiUser.id,
+              openId: apiUser.openId,
+              name: apiUser.name,
+              email: apiUser.email,
+              loginMethod: apiUser.loginMethod,
+              lastSignedIn: new Date(apiUser.lastSignedIn),
+            };
+            setUser(userInfo);
+            await Auth.setUserInfo(userInfo);
+            console.log("[useAuth] Web user set from API:", userInfo);
+          } else {
+            console.log("[useAuth] Web: No authenticated user from API");
+            setUser(null);
+            await Auth.clearUserInfo();
+          }
+        } catch (apiError) {
+          console.warn("[useAuth] API fetch failed, redirecting to login:", apiError);
           setUser(null);
           await Auth.clearUserInfo();
         }
@@ -59,16 +81,8 @@ export function useAuth(options?: UseAuthOptions) {
         return;
       }
 
-      // Use cached user info for native (token validates the session)
-      const cachedUser = await Auth.getUserInfo();
-      console.log("[useAuth] Cached user:", cachedUser);
-      if (cachedUser) {
-        console.log("[useAuth] Using cached user info");
-        setUser(cachedUser);
-      } else {
-        console.log("[useAuth] No cached user, setting user to null");
-        setUser(null);
-      }
+      console.log("[useAuth] Session token valid, user authenticated");
+      setUser(cachedUser || null);
     } catch (err) {
       const error = err instanceof Error ? err : new Error("Failed to fetch user");
       console.error("[useAuth] fetchUser error:", error);
