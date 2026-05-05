@@ -1,7 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.VITE_SUPABASE_URL || "";
-const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || "";
+const supabaseUrl = process.env.VITE_SUPABASE_URL || "https://whwguwpynewmnhzywhwg.backend.onspace.ai";
+const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3Nzc2MjQ2MjksImV4cCI6MjA5Mjk4NDYyOSwicmVmIjoid2h3Z3V3cHluZXdtbmh6eXdod2ciLCJyb2xlIjoiYW5vbiIsImlzcyI6Im9uc3BhY2UifQ.qyXh3SaSQA85I3GqQI75kAeDnTK0di7__F3_rXTI8rQ";
+
+if (!supabaseUrl || !supabaseKey) {
+  console.error("Supabase URL va key kerak");
+}
 
 /**
  * Supabase client - FanFaster backend'i bilan bog'lanish
