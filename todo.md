@@ -38,8 +38,20 @@
 - [x] Splash screen'ni sozlash
 - [x] Android adaptive icon'ni sozlash
 
+## API Integratsiyasi
+
+- [x] Supabase client'ini yaratish
+- [x] Autentifikatsiya hook'ini yaratish
+- [x] Login ekranini yaratish
+- [x] O'quv Materiallari ekranini real ma'lumotlar bilan bog'lash
+- [x] Savol-Javoblar ekranini real ma'lumotlar bilan bog'lash
+- [x] Testlar ekranini real ma'lumotlar bilan bog'lash
+- [x] Kazuslar ekranini real ma'lumotlar bilan bog'lash
+- [x] Profil ekranini real ma'lumotlar bilan bog'lash
+- [x] API integratsiyasi qo'llanmasini yaratish
+
 ## Deployment
 
-- [ ] GitHub repozitoriyasiga kodni yuklash
-- [ ] Loyihani GitHub'da yaratish
-- [ ] Git konfiguratsiyasini o'rnatish
+- [x] GitHub repozitoriyasiga kodni yuklash
+- [ ] API ma'lumotlarini GitHub'ga push qilish
+- [ ] Loyihani test qilish va tekshirish

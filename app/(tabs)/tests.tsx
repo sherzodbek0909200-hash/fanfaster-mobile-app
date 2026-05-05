@@ -1,74 +1,93 @@
-import { ScrollView, Text, View, FlatList, TouchableOpacity } from "react-native";
+import { useEffect, useState } from "react";
+import { ScrollView, Text, View, FlatList, TouchableOpacity, ActivityIndicator } from "react-native";
 import { ScreenContainer } from "@/components/screen-container";
+import { getTests } from "@/lib/supabase-client";
+
+interface Test {
+  id: number;
+  nomi: string;
+  tavsifi: string;
+  savol_soni: number;
+  davomiyligi: string;
+  [key: string]: any;
+}
 
 /**
  * Tests Screen - Mavjud Testlar
- * Displays available tests for knowledge assessment
+ * Real vaqtda Supabase'dan testlarni yuklash
  */
 export default function TestsScreen() {
-  const tests = [
-    {
-      id: "1",
-      title: "AI Fundamentals Test",
-      questions: 20,
-      duration: "30 min",
-      score: 85,
-      completed: true,
-    },
-    {
-      id: "2",
-      title: "Machine Learning Basics",
-      questions: 25,
-      duration: "45 min",
-      score: null,
-      completed: false,
-    },
-    {
-      id: "3",
-      title: "Python Programming Quiz",
-      questions: 30,
-      duration: "60 min",
-      score: 92,
-      completed: true,
-    },
-    {
-      id: "4",
-      title: "Data Science Challenge",
-      questions: 40,
-      duration: "90 min",
-      score: null,
-      completed: false,
-    },
-  ];
+  const [tests, setTests] = useState<Test[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const renderTest = ({ item }: any) => (
+  useEffect(() => {
+    loadTests();
+  }, []);
+
+  const loadTests = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    const result = await getTests();
+
+    if (result.success) {
+      setTests(result.data);
+    } else {
+      setError(result.error);
+    }
+
+    setIsLoading(false);
+  };
+
+  const renderTest = ({ item }: { item: Test }) => (
     <TouchableOpacity activeOpacity={0.7} className="mb-4">
       <View className="bg-surface rounded-2xl p-4 border border-border">
         <View className="flex-row justify-between items-start mb-3">
           <View className="flex-1">
-            <Text className="text-lg font-semibold text-foreground">{item.title}</Text>
+            <Text className="text-lg font-semibold text-foreground">{item.nomi}</Text>
+            <Text className="text-sm text-muted mt-1">{item.tavsifi}</Text>
             <View className="flex-row gap-4 mt-2">
-              <Text className="text-sm text-muted">{item.questions} savol</Text>
-              <Text className="text-sm text-muted">{item.duration}</Text>
+              <Text className="text-sm text-muted">{item.savol_soni} savol</Text>
+              <Text className="text-sm text-muted">{item.davomiyligi}</Text>
             </View>
           </View>
-          {item.completed && (
-            <View className="bg-success px-3 py-1 rounded-full">
-              <Text className="text-sm font-semibold text-white">{item.score}%</Text>
-            </View>
-          )}
         </View>
 
         <View className="pt-3 border-t border-border">
           <TouchableOpacity className="bg-primary rounded-lg py-2 px-4 items-center">
-            <Text className="text-white font-semibold text-sm">
-              {item.completed ? "Qayta Topshirish" : "Testni Boshlash"}
-            </Text>
+            <Text className="text-white font-semibold text-sm">Testni Boshlash</Text>
           </TouchableOpacity>
         </View>
       </View>
     </TouchableOpacity>
   );
+
+  if (isLoading) {
+    return (
+      <ScreenContainer className="p-4 justify-center items-center">
+        <ActivityIndicator size="large" color="#0a7ea4" />
+        <Text className="text-muted mt-4">Testlar yuklanimoqda...</Text>
+      </ScreenContainer>
+    );
+  }
+
+  if (error) {
+    return (
+      <ScreenContainer className="p-4 justify-center">
+        <View className="bg-error bg-opacity-10 rounded-2xl p-6 items-center gap-4">
+          <Text className="text-error font-semibold text-lg">Xato yuz berdi</Text>
+          <Text className="text-error text-sm text-center">{error}</Text>
+          <TouchableOpacity
+            onPress={loadTests}
+            className="bg-error rounded-lg px-6 py-2 mt-2"
+          >
+            <Text className="text-white font-semibold">Qayta Urinish</Text>
+          </TouchableOpacity>
+        </View>
+      </ScreenContainer>
+    );
+  }
 
   return (
     <ScreenContainer className="p-4">
@@ -76,13 +95,19 @@ export default function TestsScreen() {
         <Text className="text-3xl font-bold text-foreground mb-2">Mavjud Testlar</Text>
         <Text className="text-base text-muted mb-6">Bilimni sinash uchun testlar</Text>
 
-        <FlatList
-          data={tests}
-          renderItem={renderTest}
-          keyExtractor={(item) => item.id}
-          scrollEnabled={false}
-          contentContainerStyle={{ paddingBottom: 20 }}
-        />
+        {tests.length === 0 ? (
+          <View className="items-center justify-center py-12">
+            <Text className="text-muted text-lg">Testlar topilmadi</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={tests}
+            renderItem={renderTest}
+            keyExtractor={(item) => item.id.toString()}
+            scrollEnabled={false}
+            contentContainerStyle={{ paddingBottom: 20 }}
+          />
+        )}
       </ScrollView>
     </ScreenContainer>
   );

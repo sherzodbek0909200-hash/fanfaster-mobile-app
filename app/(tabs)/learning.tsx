@@ -1,77 +1,117 @@
-import { ScrollView, Text, View, FlatList } from "react-native";
+import { useEffect, useState } from "react";
+import { ScrollView, Text, View, FlatList, TouchableOpacity, ActivityIndicator } from "react-native";
 import { ScreenContainer } from "@/components/screen-container";
+import { getLessons } from "@/lib/supabase-client";
+
+interface Lesson {
+  id: number;
+  nomi: string;
+  tavsifi: string;
+  kategoriya: string;
+  davomiyligi: string;
+  [key: string]: any;
+}
 
 /**
  * Learning Screen - O'quv Materiallari
- * Displays learning materials and courses
+ * Real vaqtda Supabase'dan darslarni yuklash
  */
 export default function LearningScreen() {
-  const lessons = [
-    {
-      id: "1",
-      title: "Sun'iy Intellekt Asoslari",
-      category: "AI",
-      duration: "45 min",
-      progress: 75,
-    },
-    {
-      id: "2",
-      title: "Mashinali O'rganish Kirish",
-      category: "ML",
-      duration: "60 min",
-      progress: 50,
-    },
-    {
-      id: "3",
-      title: "Data Science Fundamentals",
-      category: "Data",
-      duration: "90 min",
-      progress: 25,
-    },
-    {
-      id: "4",
-      title: "Python Dasturlash",
-      category: "Programming",
-      duration: "120 min",
-      progress: 0,
-    },
-  ];
+  const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const renderLesson = ({ item }: any) => (
-    <View className="bg-surface rounded-2xl p-4 mb-4 border border-border">
-      <View className="flex-row justify-between items-start mb-3">
-        <View className="flex-1">
-          <Text className="text-lg font-semibold text-foreground">{item.title}</Text>
-          <Text className="text-sm text-muted mt-1">{item.category}</Text>
+  useEffect(() => {
+    loadLessons();
+  }, []);
+
+  const loadLessons = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    const result = await getLessons();
+
+    if (result.success) {
+      setLessons(result.data);
+    } else {
+      setError(result.error);
+    }
+
+    setIsLoading(false);
+  };
+
+  const renderLesson = ({ item }: { item: Lesson }) => (
+    <TouchableOpacity activeOpacity={0.7} className="mb-4">
+      <View className="bg-surface rounded-2xl p-4 border border-border">
+        <View className="flex-row justify-between items-start mb-3">
+          <View className="flex-1">
+            <Text className="text-lg font-semibold text-foreground">{item.nomi}</Text>
+            <Text className="text-sm text-muted mt-1">{item.tavsifi}</Text>
+          </View>
         </View>
-        <View className="bg-primary px-3 py-1 rounded-full">
-          <Text className="text-xs font-semibold text-white">{item.duration}</Text>
+
+        <View className="flex-row justify-between items-center pt-3 border-t border-border gap-4">
+          <View className="flex-1">
+            <View className="bg-primary bg-opacity-20 rounded-full px-3 py-1">
+              <Text className="text-xs font-semibold text-primary">{item.kategoriya}</Text>
+            </View>
+          </View>
+          <Text className="text-xs text-muted">{item.davomiyligi}</Text>
+        </View>
+
+        {/* Progress Bar */}
+        <View className="mt-3 h-2 bg-border rounded-full overflow-hidden">
+          <View className="h-full w-1/3 bg-success rounded-full" />
         </View>
       </View>
-
-      <View className="h-2 bg-border rounded-full overflow-hidden">
-        <View
-          className="h-full bg-primary"
-          style={{ width: `${item.progress}%` }}
-        />
-      </View>
-      <Text className="text-xs text-muted mt-2">{item.progress}% tugallangan</Text>
-    </View>
+    </TouchableOpacity>
   );
+
+  if (isLoading) {
+    return (
+      <ScreenContainer className="p-4 justify-center items-center">
+        <ActivityIndicator size="large" color="#0a7ea4" />
+        <Text className="text-muted mt-4">Darslar yuklanimoqda...</Text>
+      </ScreenContainer>
+    );
+  }
+
+  if (error) {
+    return (
+      <ScreenContainer className="p-4 justify-center">
+        <View className="bg-error bg-opacity-10 rounded-2xl p-6 items-center gap-4">
+          <Text className="text-error font-semibold text-lg">Xato yuz berdi</Text>
+          <Text className="text-error text-sm text-center">{error}</Text>
+          <TouchableOpacity
+            onPress={loadLessons}
+            className="bg-error rounded-lg px-6 py-2 mt-2"
+          >
+            <Text className="text-white font-semibold">Qayta Urinish</Text>
+          </TouchableOpacity>
+        </View>
+      </ScreenContainer>
+    );
+  }
 
   return (
     <ScreenContainer className="p-4">
       <ScrollView showsVerticalScrollIndicator={false}>
         <Text className="text-3xl font-bold text-foreground mb-2">O'quv Materiallari</Text>
-        <Text className="text-base text-muted mb-6">Saralangan va tizimlashtirilgan kontent</Text>
+        <Text className="text-base text-muted mb-6">Saralangan va tizimli darslar</Text>
 
-        <FlatList
-          data={lessons}
-          renderItem={renderLesson}
-          keyExtractor={(item) => item.id}
-          scrollEnabled={false}
-          contentContainerStyle={{ paddingBottom: 20 }}
-        />
+        {lessons.length === 0 ? (
+          <View className="items-center justify-center py-12">
+            <Text className="text-muted text-lg">Darslar topilmadi</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={lessons}
+            renderItem={renderLesson}
+            keyExtractor={(item) => item.id.toString()}
+            scrollEnabled={false}
+            contentContainerStyle={{ paddingBottom: 20 }}
+          />
+        )}
       </ScrollView>
     </ScreenContainer>
   );
